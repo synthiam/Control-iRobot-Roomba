@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<PluginV1XML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <FRIENDLY_NAME>iRobot Roomba Movement Panel</FRIENDLY_NAME>
+  <DLL_FILENAME>iRobot Roomba Movement Panel.dll</DLL_FILENAME>
+  <AUTHOR_NAME>DJ Sures</AUTHOR_NAME>
+  <LICENSE_URL>http://www.ez-robot.com/tutorials/plugin-license.aspx</LICENSE_URL>
+  <PLUGIN_GUID>f4bb46be-6712-4aed-8dca-096c12b2abf5</PLUGIN_GUID>
+  <CATEGORY_TYPE>Movement Panels</CATEGORY_TYPE>
+  <DESCRIPTION>Control the iRobot Roomba and read sensor data</DESCRIPTION>
+  <VersionRelease>13</VersionRelease>
+</PluginV1XML>
