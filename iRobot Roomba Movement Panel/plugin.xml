@@ -7,5 +7,5 @@
   <PLUGIN_GUID>f4bb46be-6712-4aed-8dca-096c12b2abf5</PLUGIN_GUID>
   <CATEGORY_TYPE>Movement Panels</CATEGORY_TYPE>
   <DESCRIPTION>Control the iRobot Roomba and read sensor data</DESCRIPTION>
-  <VersionRelease>13</VersionRelease>
+  <VersionRelease>15</VersionRelease>
 </PluginV1XML>

@@ -15,14 +15,14 @@ namespace Create2OI.Chassis {
       _data = data;
       pos = 0;
 
-      byte t;
+      byte tmpByte;
 
       // 7
-      t = getByte();
-      WheelDropLeft = EZ_B.Functions.IsBitSet(t, 3);
-      WheelDropRight = EZ_B.Functions.IsBitSet(t, 2);
-      BumpLeft = EZ_B.Functions.IsBitSet(t, 1);
-      BumpRight = EZ_B.Functions.IsBitSet(t, 0);
+      tmpByte = getByte();
+      WheelDropLeft = EZ_B.Functions.IsBitSet(tmpByte, 3);
+      WheelDropRight = EZ_B.Functions.IsBitSet(tmpByte, 2);
+      BumpLeft = EZ_B.Functions.IsBitSet(tmpByte, 1);
+      BumpRight = EZ_B.Functions.IsBitSet(tmpByte, 0);
 
       // 8
       Wall = getBool();
@@ -43,11 +43,11 @@ namespace Create2OI.Chassis {
       VirtualWall = getBool();
 
       // 14
-      t = getByte();
-      OverCurrentLeftWheel = EZ_B.Functions.IsBitSet(t, 4);
-      OverCurrentRightWheel = EZ_B.Functions.IsBitSet(t, 3);
-      OverCurrentMainBrush = EZ_B.Functions.IsBitSet(t, 2);
-      OverCurrentSideBrush = EZ_B.Functions.IsBitSet(t, 0);
+      tmpByte = getByte();
+      OverCurrentLeftWheel = EZ_B.Functions.IsBitSet(tmpByte, 4);
+      OverCurrentRightWheel = EZ_B.Functions.IsBitSet(tmpByte, 3);
+      OverCurrentMainBrush = EZ_B.Functions.IsBitSet(tmpByte, 2);
+      OverCurrentSideBrush = EZ_B.Functions.IsBitSet(tmpByte, 0);
 
       // 15
       DirtDetect = getByte();
@@ -59,16 +59,16 @@ namespace Create2OI.Chassis {
       InfraredCharacterOmni = getByte();
 
       // 18
-      t = getByte();
-      ButtonState = t;
-      ButtonClock = EZ_B.Functions.IsBitSet(t, 7);
-      ButtonSchedule = EZ_B.Functions.IsBitSet(t, 6);
-      ButtonDay = EZ_B.Functions.IsBitSet(t, 5);
-      ButtonHour = EZ_B.Functions.IsBitSet(t, 4);
-      ButtonMinute = EZ_B.Functions.IsBitSet(t, 3);
-      ButtonDock = EZ_B.Functions.IsBitSet(t, 2);
-      ButtonSpot = EZ_B.Functions.IsBitSet(t, 1);
-      ButtonClean = EZ_B.Functions.IsBitSet(t, 0);
+      tmpByte = getByte();
+      ButtonState = tmpByte;
+      ButtonClock = EZ_B.Functions.IsBitSet(tmpByte, 7);
+      ButtonSchedule = EZ_B.Functions.IsBitSet(tmpByte, 6);
+      ButtonDay = EZ_B.Functions.IsBitSet(tmpByte, 5);
+      ButtonHour = EZ_B.Functions.IsBitSet(tmpByte, 4);
+      ButtonMinute = EZ_B.Functions.IsBitSet(tmpByte, 3);
+      ButtonDock = EZ_B.Functions.IsBitSet(tmpByte, 2);
+      ButtonSpot = EZ_B.Functions.IsBitSet(tmpByte, 1);
+      ButtonClean = EZ_B.Functions.IsBitSet(tmpByte, 0);
 
       // 19
       Distance = getInt16();
@@ -114,9 +114,9 @@ namespace Create2OI.Chassis {
       pos += 3;
 
       // 34
-      t = getByte();
-      ChargingSourceHomeBase = EZ_B.Functions.IsBitSet(t, 1);
-      ChargingSourceInternalCharger = EZ_B.Functions.IsBitSet(t, 0);
+      tmpByte = getByte();
+      ChargingSourceHomeBase = EZ_B.Functions.IsBitSet(tmpByte, 1);
+      ChargingSourceInternalCharger = EZ_B.Functions.IsBitSet(tmpByte, 0);
 
       // 35
       OIMode = getByte();
@@ -149,13 +149,13 @@ namespace Create2OI.Chassis {
       LeftEncoderCounts = getUInt16();
 
       // 45
-      t = getByte();
-      LightBumperRight = EZ_B.Functions.IsBitSet(t, 5);
-      LightBumperFrontRight = EZ_B.Functions.IsBitSet(t, 4);
-      LightBumperCenterRight = EZ_B.Functions.IsBitSet(t, 3);
-      LightBumperCenterLeft = EZ_B.Functions.IsBitSet(t, 2);
-      LightBumperFrontLeft = EZ_B.Functions.IsBitSet(t, 1);
-      LightBumperLeft = EZ_B.Functions.IsBitSet(t, 0);
+      tmpByte = getByte();
+      LightBumperRight = EZ_B.Functions.IsBitSet(tmpByte, 5);
+      LightBumperFrontRight = EZ_B.Functions.IsBitSet(tmpByte, 4);
+      LightBumperCenterRight = EZ_B.Functions.IsBitSet(tmpByte, 3);
+      LightBumperCenterLeft = EZ_B.Functions.IsBitSet(tmpByte, 2);
+      LightBumperFrontLeft = EZ_B.Functions.IsBitSet(tmpByte, 1);
+      LightBumperLeft = EZ_B.Functions.IsBitSet(tmpByte, 0);
 
       // 46
       LightBumperLeftSignal = getUInt16();

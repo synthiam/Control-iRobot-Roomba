@@ -8,8 +8,6 @@ namespace Create2OI.Chassis {
 
   public class Create : IDisposable {
 
-    bool _lastButtonState = false;
-
     public enum ButtonTypeEnum {
       Clean,
       Spot,
@@ -21,6 +19,10 @@ namespace Create2OI.Chassis {
       Clock
     }
 
+    public event EventHandler<int> OnStreamPacketCnt;
+
+    public event EventHandler<string> OnLog;
+
     public event EventHandler<bool> OnButtonPressed;
 
     public delegate void OnErrorEventHandler(object sender, Exception txt);
@@ -30,6 +32,8 @@ namespace Create2OI.Chassis {
     bool                _isRunning = false;
     List<byte>          _buffer = new List<byte>();
     bool                _sendNMS = false;
+    bool                _lastButtonState = false;
+    int                 _streamPacketCnt = 0;
 
     public IOCommunicator IO {
       private set;
@@ -51,6 +55,8 @@ namespace Create2OI.Chassis {
       _timer.Interval = pollTimeMS;
 
       ARC.Scripting.VariableManager.SetVariable("$RoombaSensorStreaming", false);
+
+      OnLog?.Invoke(this, "iRobot communicate initialized");
     }
 
     public void Dispose() {
@@ -76,7 +82,19 @@ namespace Create2OI.Chassis {
 
       _buffer.Clear();
 
+      _streamPacketCnt = 0;
+
+      // Let the input buffer clear if the roomba was in mid send of sensor data
+      System.Threading.Thread.Sleep(500);
+
+      var tmp = IO.ReadBytes(IO.BytesToRead);
+
+      if (tmp.Length > 0)
+        OnLog?.Invoke(this, $"Cleared {tmp.Length} bytes from input buffer");
+
       _timer.Start();
+
+      OnLog?.Invoke(this, "Sensor stream started");
     }
 
     public void StopStreaming() {
@@ -85,6 +103,8 @@ namespace Create2OI.Chassis {
         _timer.Stop();
 
       ARC.Scripting.VariableManager.SetVariable("$RoombaSensorStreaming", false);
+
+      OnLog?.Invoke(this, "Sensor stream stopped");
     }
 
     private void _timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
@@ -100,7 +120,7 @@ namespace Create2OI.Chassis {
 
         _buffer.AddRange(IO.ReadBytes(IO.BytesToRead));
 
-        while (_buffer.Count >= 80) {
+        while (_buffer.Count >= 80 && _timer != null) {
 
           var data = _buffer.Take(80).ToArray();
 
@@ -197,6 +217,10 @@ namespace Create2OI.Chassis {
           //      (int)delta);
           //}
 
+          _streamPacketCnt++;
+
+          OnStreamPacketCnt?.Invoke(this, _streamPacketCnt);
+
           sensorData = null;
         }
       } catch (Exception ex) {
@@ -208,11 +232,6 @@ namespace Create2OI.Chassis {
 
         _isRunning = false;
       }
-    }
-
-    double radians(double degrees) {
-
-      return degrees * Math.PI / 180;
     }
 
     public bool SetMode(OperatingMode byOpenInterfaceMode) {
@@ -270,14 +289,15 @@ namespace Create2OI.Chassis {
 
       bool bSuccess;
 
-      List<byte> send = new List<byte>();
-      send.Add((byte)OpCode.DRIVE_DIRECT);
-      send.Add(byRightHi);
-      send.Add(byRightLo);
-      send.Add(byLeftHi);
-      send.Add(byLeftLo);
+      var send = new byte[] {
+        (byte)OpCode.DRIVE_DIRECT,
+        byRightHi,
+        byRightLo,
+        byLeftHi,
+        byLeftLo
+      };
 
-      IO.Write(send.ToArray());
+      IO.Write(send);
 
       bSuccess = true;
 
@@ -318,9 +338,25 @@ namespace Create2OI.Chassis {
       return success;
     }
 
+    /// <summary>
+    /// Power off
+    /// </summary>
+    public void PowerOff() {
+
+      Execute(OpCode.POWER);
+
+      OnLog?.Invoke(this, "Powered off");
+    }
+
+
+    /// <summary>
+    /// Tell the robot to reset itself and also powers down
+    /// </summary>
     public void Reset() {
 
       Execute(OpCode.RESET);
+
+      OnLog?.Invoke(this, "Reset & power off (verify beep)");
     }
 
     /// <summary>
@@ -331,7 +367,7 @@ namespace Create2OI.Chassis {
     /// Changes mode to: Off. Roomba plays a song to acknowledge it is exiting the OI.
     /// Opcode: 173 Data Bytes: 0
     /// </summary>
-    public void StopRobot() {
+    public void StopCommunication() {
 
       Execute(OpCode.STOP);
     }

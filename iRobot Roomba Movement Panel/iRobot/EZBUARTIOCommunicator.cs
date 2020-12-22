@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Create2OI.Chassis {
+﻿namespace Create2OI.Chassis {
 
   public class EZBUARTIOCommunicator : IOCommunicator {
 
@@ -13,37 +11,12 @@ namespace Create2OI.Chassis {
       _uartPortIndex = uartPortIndex;
       _baudRate = baudRate;
 
-      ARC.EZBManager.PrimaryEZB.OnConnectionChange2 += PrimaryEZB_OnConnectionChange2;
-
-      if (ARC.EZBManager.PrimaryEZB.IsConnected)
-        init();
+      ARC.EZBManager.PrimaryEZB.Uart.UARTExpansionInit(_uartPortIndex, (uint)_baudRate);
     }
 
     public bool SupportsStreaming {
       get {
         return true;
-      }
-    }
-
-    void init() {
-
-      try {
-
-        ARC.EZBManager.PrimaryEZB.Uart.UARTExpansionInit(_uartPortIndex, (uint)_baudRate);
-      } catch {
-
-        throw;
-      }
-    }
-
-    private void PrimaryEZB_OnConnectionChange2(EZ_B.EZB sender, bool isConnected) {
-
-      try {
-
-        if (isConnected)
-          init();
-      } catch {
-
       }
     }
 
@@ -71,7 +44,6 @@ namespace Create2OI.Chassis {
 
     public void Dispose() {
 
-      ARC.EZBManager.PrimaryEZB.OnConnectionChange2 -= PrimaryEZB_OnConnectionChange2;
     }
   }
 }

@@ -78,6 +78,9 @@ namespace iRobot_Roomba_Movement_Panel {
 
     private void MovementManager_OnSpeedChanged(int speedLeft, int speedRight) {
 
+      if (IsClosing)
+        return;
+
       Invokers.SetValue(tbSpeedLeft, speedLeft);
       Invokers.SetValue(tbSpeedRight, speedRight);
     }
@@ -119,7 +122,7 @@ namespace iRobot_Roomba_Movement_Panel {
         s.OnDone += S_OnDone;
         s.OnError += S_OnError;
         s.OnResult += S_OnResult;
-        s.OnStart += S_OnStart;       
+        s.OnStart += S_OnStart;
       }
 
       cf.SCRIPTS.AddIfNotExist(Config.ConfigTitles.SCRIPT_BUTTON_PRESSED, new ARC.Config.Sub.Reusable.ScriptDefinition());
@@ -134,35 +137,45 @@ namespace iRobot_Roomba_Movement_Panel {
       cf.STORAGE.AddIfNotExist(Config.ConfigTitles.SENSOR_POLL_TIME_MS, 500);
       cf.STORAGE.AddIfNotExist(Config.ConfigTitles.NMS_POSITION_DATA, true);
 
-      if (EZBManager.PrimaryEZB.IsConnected)
-        try {
+      try {
 
-          init();
-        } catch (Exception ex) {
+        init();
+      } catch (Exception ex) {
 
-          tbLog.AppendText(ex.Message);
-          tbLog.AppendText(Environment.NewLine);
-        }
+        Invokers.SetAppendText(tbLog, true, ex.Message);
+      }
 
       base.SetConfiguration(cf);
     }
 
     private void S_OnStart(string compilerName) {
 
+      if (IsClosing)
+        return;
+
       Invokers.SetAppendText(tbLog, true, "Pressed");
     }
 
     private void S_OnResult(string compilerName, string resultTxt) {
+
+      if (IsClosing)
+        return;
 
       Invokers.SetAppendText(tbLog, true, $"> {resultTxt}");
     }
 
     private void S_OnError(string compilerName, string errorMessage) {
 
+      if (IsClosing)
+        return;
+
       Invokers.SetAppendText(tbLog, true, $"> {errorMessage}");
     }
 
     private void S_OnDone(string compilerName, TimeSpan timeTook) {
+
+      if (IsClosing)
+        return;
 
       Invokers.SetAppendText(tbLog, true, $"Done {timeTook}");
     }
@@ -281,6 +294,11 @@ namespace iRobot_Roomba_Movement_Panel {
 
       if (_robotController != null) {
 
+        _robotController.OnError -= _robotController_OnError;
+        _robotController.OnButtonPressed -= _robotController_OnButtonPressed;
+        _robotController.OnLog -= _robotController_OnLog;
+        _robotController.OnStreamPacketCnt -= _robotController_OnStreamPacketCnt;
+
         _robotController.Dispose();
 
         _robotController = null;
@@ -298,7 +316,7 @@ namespace iRobot_Roomba_Movement_Panel {
         var digitalPort = (Digital.DigitalPortEnum)_cf.STORAGE[Config.ConfigTitles.EZB_SERIAL_PORT];
         var baudrate = (Uart.BAUD_RATE_ENUM)_cf.STORAGE[Config.ConfigTitles.BAUD_RATE_SERIAL];
 
-        tbLog.AppendText(string.Format("Connecting software serial port {0} at {1} baud...", digitalPort, baudrate));
+        tbLog.AppendText(string.Format("Connecting software serial port {0} @ {1}...", digitalPort, baudrate));
 
         comm = new EZBDigitalIOCommunicator(digitalPort, baudrate);
       } else if (portType == Config.ConfigTitles.PortTypeEnum.HW_UART) {
@@ -309,7 +327,7 @@ namespace iRobot_Roomba_Movement_Panel {
         var uartPort = Convert.ToInt16(_cf.STORAGE[Config.ConfigTitles.EZB_UART_PORT]);
         var baudRate = Convert.ToInt32(_cf.STORAGE[Config.ConfigTitles.BAUD_RATE_UART]);
 
-        tbLog.AppendText(string.Format("Connecting HW UART {0} at {1} baud...", uartPort, baudRate));
+        tbLog.AppendText(string.Format("Connecting HW UART {0} @ {1}...", uartPort, baudRate));
 
         comm = new EZBUARTIOCommunicator(uartPort, baudRate);
       } else {
@@ -317,27 +335,44 @@ namespace iRobot_Roomba_Movement_Panel {
         var comPort = _cf.STORAGE[Config.ConfigTitles.PC_COM_PORT].ToString();
         var baudRate = Convert.ToInt32(_cf.STORAGE[Config.ConfigTitles.BAUD_RATE_PC]);
 
-        tbLog.AppendText(string.Format("Connecting {0} at {1} baud...", comPort, baudRate));
+        tbLog.AppendText(string.Format("Connecting {0} @ {1}...", comPort, baudRate));
 
         comm = new SerialPortIOCommunicator(comPort, baudRate);
       }
 
       _robotController = new Create(
-        comm, 
+        comm,
         Convert.ToInt32(_cf.STORAGE[Config.ConfigTitles.SENSOR_POLL_TIME_MS]),
         Convert.ToBoolean(_cf.STORAGE[Config.ConfigTitles.NMS_POSITION_DATA]));
 
       _robotController.OnError += _robotController_OnError;
       _robotController.OnButtonPressed += _robotController_OnButtonPressed;
+      _robotController.OnLog += _robotController_OnLog;
+      _robotController.OnStreamPacketCnt += _robotController_OnStreamPacketCnt;
+
       _robotController.SetMode(Create2OI.Types.OperatingMode.FULL);
 
       cbSensorStream_CheckedChanged(null, null);
 
       doMotors();
 
-      tbLog.AppendText("Connected");
+      Invokers.SetAppendText(tbLog, true, "Connected");
+    }
 
-      tbLog.AppendText(Environment.NewLine);
+    private void _robotController_OnStreamPacketCnt(object sender, int e) {
+
+      if (IsClosing)
+        return;
+
+      Invokers.SetText(lblStreamCnt, $"{e:###,###}");
+    }
+
+    private void _robotController_OnLog(object sender, string e) {
+
+      if (IsClosing)
+        return;
+
+      Invokers.SetAppendText(tbLog, true, e);
     }
 
     private void _robotController_OnButtonPressed(object sender, bool e) {
@@ -357,7 +392,7 @@ namespace iRobot_Roomba_Movement_Panel {
 
     private void Movement_OnMovement2(MovementManager.MovementDirectionEnum direction, byte speedLeft, byte speedRight) {
 
-      if (_robotController == null)
+      if (_robotController == null || IsClosing)
         return;
 
       var speedLeftScaled = (short)Functions.RemapScalar(speedLeft, 0, 255, 0, 500);
@@ -489,8 +524,7 @@ namespace iRobot_Roomba_Movement_Panel {
         init();
       } catch (Exception ex) {
 
-        tbLog.AppendText(ex.Message);
-        tbLog.AppendText(Environment.NewLine);
+        Invokers.SetAppendText(tbLog, true, ex.Message);
       }
     }
 
@@ -498,7 +532,7 @@ namespace iRobot_Roomba_Movement_Panel {
 
       try {
 
-        if (_robotController == null)
+        if (_robotController == null || IsClosing)
           return;
 
         if (cbSensorStream.Checked)
@@ -525,6 +559,22 @@ namespace iRobot_Roomba_Movement_Panel {
         if (f.ShowDialog() == DialogResult.OK)
           SetConfiguration(f.GetConfiguration);
       }
+    }
+
+    private void btnReset_Click(object sender, EventArgs e) {
+
+      if (_robotController == null)
+        return;
+
+      _robotController.Reset();
+    }
+
+    private void btnPowerDown_Click(object sender, EventArgs e) {
+
+      if (_robotController == null)
+        return;
+
+      _robotController.PowerOff();
     }
   }
 }
